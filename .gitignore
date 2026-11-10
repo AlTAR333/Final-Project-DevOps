@@ -1,2 +1,11 @@
 /venv
 .env
+
+# Claude Code (local only)
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+
+# OS / IDE
+.DS_Store
+.idea/
