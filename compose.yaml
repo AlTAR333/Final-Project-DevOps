@@ -1,0 +1,3 @@
+# Owner: Armand. db (postgres 16 + volume), migrate, 2 API instances behind :8080, 2 workers.
+# Start: docker compose up -d --build    Stop (keeps data): docker compose down
+services: {}

@@ -1,0 +1,5 @@
+# Dev and test tooling. Runtime dependencies live in api/ and worker/requirements.txt.
+-r api/requirements.txt
+-r worker/requirements.txt
+pytest==8.3.3
+ruff==0.6.9
