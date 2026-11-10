@@ -9,3 +9,12 @@ CLAUDE.local.md
 # OS / IDE
 .DS_Store
 .idea/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/

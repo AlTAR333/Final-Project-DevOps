@@ -1,0 +1,16 @@
+# Owner: all three. Tool configuration only.
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = [
+    "integration: needs the isolated test Postgres",
+    "race: concurrency tests",
+]
