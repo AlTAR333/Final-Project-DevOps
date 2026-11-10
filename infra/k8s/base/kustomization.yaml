@@ -1,0 +1,12 @@
+# Owner: Mink. Apply with: kubectl apply -k infra/k8s/base
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: fulfillops
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - postgres.yaml
+  - migrate-job.yaml
+  - api-deployment.yaml
+  - api-service.yaml
+  - worker-deployment.yaml

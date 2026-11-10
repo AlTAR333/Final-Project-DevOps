@@ -1,0 +1,17 @@
+# Owner: Tristan. Placeholder so PRs show a check; replace the step with the real pipeline.
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  placeholder:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: echo "TODO(Tristan) lint, tests, public checker, image build, scan, SBOM, publish"
