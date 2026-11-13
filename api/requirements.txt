@@ -7,4 +7,4 @@ click==8.5.0
 itsdangerous==2.2.0
 Jinja2==3.1.6
 MarkupSafe==3.0.3
-# Database driver: Tristan adds it here when he implements common/db.py (e.g. psycopg).
+psycopg[binary]==3.2.13

@@ -3,9 +3,8 @@
 Owner: Tristan.
 """
 
-# TODO(Tristan): choose the driver (e.g. psycopg 3 + psycopg_pool) and pin it in
-# api/requirements.txt and worker/requirements.txt.
+import psycopg
 
 
-def connect(database_url: str):
-    raise NotImplementedError
+def connect(database_url: str) -> psycopg.Connection:
+    return psycopg.connect(database_url, autocommit=True)
