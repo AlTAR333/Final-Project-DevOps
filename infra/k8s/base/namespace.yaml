@@ -10,3 +10,5 @@ metadata:
     pod-security.kubernetes.io/enforce-version: latest
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    # Never pruned or deleted by Argo CD: it holds the out-of-Git Secret and the DB volume.
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
