@@ -1,1 +1,20 @@
-# Owner: Mink. TODO
+# Owner: Mink. NodePort 30080 is mapped to localhost:8080 by infra/kind/cluster.yaml, so the
+# rollout probe and the checker go through kube-proxy and are balanced over Ready pods.
+# (kubectl port-forward svc/fulfillops-api 8080:80 also works, but it pins one pod and
+# breaks when that pod is replaced, so it is not used for the rolling-update probe.)
+apiVersion: v1
+kind: Service
+metadata:
+  name: fulfillops-api
+  labels:
+    app.kubernetes.io/name: fulfillops-api
+    app.kubernetes.io/part-of: fulfillops
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: fulfillops-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      nodePort: 30080
