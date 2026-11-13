@@ -18,13 +18,9 @@ class UnsafeResetError(RuntimeError):
 
 def check_safe(app_env: str, dbname: str) -> None:
     if app_env != "test":
-        raise UnsafeResetError(
-            f"refusing to reset: APP_ENV is {app_env!r}, expected 'test'"
-        )
+        raise UnsafeResetError(f"refusing to reset: APP_ENV is {app_env!r}, expected 'test'")
     if "test" not in dbname.lower():
-        raise UnsafeResetError(
-            f"refusing to reset: database {dbname!r} is not a test database"
-        )
+        raise UnsafeResetError(f"refusing to reset: database {dbname!r} is not a test database")
 
 
 def reset(conn) -> None:

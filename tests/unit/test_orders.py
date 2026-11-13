@@ -45,10 +45,7 @@ def test_hash_is_hex_sha256():
 
 
 def test_total_matches_contract_example():
-    assert (
-        compute_total({"KIT-100": 1, "PART-200": 2}, {"KIT-100": 1299, "PART-200": 599})
-        == 2497
-    )
+    assert compute_total({"KIT-100": 1, "PART-200": 2}, {"KIT-100": 1299, "PART-200": 599}) == 2497
 
 
 def test_total_empty():

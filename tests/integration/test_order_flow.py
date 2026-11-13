@@ -18,10 +18,7 @@ def test_order_reserves_stock_and_creates_job(db, make_order, new_key):
         "status": "queued",
         "total_cents": 2497,
     }
-    assert (
-        count(db, "SELECT count(*) FROM jobs WHERE order_id = %s", (result.order_id,))
-        == 1
-    )
+    assert count(db, "SELECT count(*) FROM jobs WHERE order_id = %s", (result.order_id,)) == 1
 
 
 def test_duplicate_sku_lines_are_aggregated(db, make_order, new_key):
@@ -57,9 +54,7 @@ def test_replay_returns_same_order_without_second_reservation(db, make_order, ne
 def test_replay_after_completion_still_returns_same_order(db, make_order, new_key):
     key = new_key()
     first = place_order(db, key, make_order([("KIT-100", 1)]))
-    db.execute(
-        "UPDATE orders SET status = 'completed' WHERE order_id = %s", (first.order_id,)
-    )
+    db.execute("UPDATE orders SET status = 'completed' WHERE order_id = %s", (first.order_id,))
     assert place_order(db, key, make_order([("KIT-100", 1)])).order_id == first.order_id
 
 
@@ -67,10 +62,7 @@ def test_replay_survives_new_connection(db, database_url, make_order, new_key):
     key = new_key()
     first = place_order(db, key, make_order([("KIT-100", 1)]))
     with connect(database_url) as fresh:
-        assert (
-            place_order(fresh, key, make_order([("KIT-100", 1)])).order_id
-            == first.order_id
-        )
+        assert place_order(fresh, key, make_order([("KIT-100", 1)])).order_id == first.order_id
     assert available(db, "KIT-100") == 6
 
 
@@ -109,8 +101,6 @@ def test_exact_remaining_stock_is_accepted(db, make_order, new_key):
         place_order(db, new_key(), make_order([("PACK-300", 1)]))
 
 
-@pytest.mark.parametrize(
-    "order_id", ["not-real-order", "", "00000000-0000-0000-0000-000000000000"]
-)
+@pytest.mark.parametrize("order_id", ["not-real-order", "", "00000000-0000-0000-0000-000000000000"])
 def test_unknown_order_returns_none(db, order_id):
     assert get_order(db, order_id) is None

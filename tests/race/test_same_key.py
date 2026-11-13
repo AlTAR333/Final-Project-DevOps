@@ -47,9 +47,7 @@ def test_eight_simultaneous_same_key_requests_create_one_order(
     assert len({r.order_id for r in results}) == 1
     assert sum(not r.replayed for r in results) == 1
     assert available(db, "KIT-100") == 6
-    assert (
-        count(db, "SELECT count(*) FROM orders WHERE idempotency_key = %s", (key,)) == 1
-    )
+    assert count(db, "SELECT count(*) FROM orders WHERE idempotency_key = %s", (key,)) == 1
     assert count(db, "SELECT count(*) FROM jobs") == 1
 
 

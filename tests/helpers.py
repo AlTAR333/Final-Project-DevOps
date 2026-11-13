@@ -2,9 +2,7 @@
 
 
 def available(conn, sku):
-    return conn.execute(
-        "SELECT available FROM products WHERE sku = %s", (sku,)
-    ).fetchone()[0]
+    return conn.execute("SELECT available FROM products WHERE sku = %s", (sku,)).fetchone()[0]
 
 
 def count(conn, sql, params=()):

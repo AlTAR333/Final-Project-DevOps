@@ -24,15 +24,11 @@ def migrate(conn) -> list[str]:
             "CREATE TABLE IF NOT EXISTS schema_migrations ("
             "version TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT now())"
         )
-        applied = {
-            row[0] for row in conn.execute("SELECT version FROM schema_migrations")
-        }
+        applied = {row[0] for row in conn.execute("SELECT version FROM schema_migrations")}
         for path in pending_migrations(applied):
             with conn.transaction():
                 conn.execute(path.read_text())
-                conn.execute(
-                    "INSERT INTO schema_migrations (version) VALUES (%s)", (path.stem,)
-                )
+                conn.execute("INSERT INTO schema_migrations (version) VALUES (%s)", (path.stem,))
             done.append(path.stem)
     finally:
         conn.execute("SELECT pg_advisory_unlock(%s)", (LOCK_ID,))

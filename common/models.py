@@ -8,7 +8,10 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class OrderRequest:
-    """Output of api.validation.validate_order (Armand), input of api.orders.place_order (Tristan)."""
+    """Output of api.validation.validate_order (Armand).
+
+    Input of api.orders.place_order (Tristan).
+    """
 
     customer_id: str
     items: list[tuple[str, int]]  # (sku, quantity) as sent, before aggregation

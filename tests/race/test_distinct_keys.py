@@ -57,9 +57,7 @@ def test_competing_orders_never_oversell(db, database_url, make_order, new_key, 
     )
 
 
-def test_multi_sku_orders_in_opposite_order_do_not_deadlock(
-    db, database_url, make_order, new_key
-):
+def test_multi_sku_orders_in_opposite_order_do_not_deadlock(db, database_url, make_order, new_key):
     a = [(new_key(), make_order([("KIT-100", 1), ("PART-200", 1)])) for _ in range(10)]
     b = [(new_key(), make_order([("PART-200", 1), ("KIT-100", 1)])) for _ in range(10)]
     accepted, rejected, unexpected = _race(database_url, a + b)

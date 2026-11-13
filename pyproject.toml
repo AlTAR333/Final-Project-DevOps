@@ -3,6 +3,8 @@
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+# Provided FulfillOps checker scripts are kept verbatim; not ours to lint.
+extend-exclude = ["fulfillops_*.py"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]

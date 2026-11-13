@@ -22,9 +22,7 @@ def aggregate_lines(items: list[tuple[str, int]]) -> dict[str, int]:
 
 def normalize_and_hash(payload: dict) -> str:
     """Stable hash of the request body, independent of JSON key order."""
-    canonical = json.dumps(
-        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
-    )
+    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
@@ -66,8 +64,10 @@ def place_order(conn, idempotency_key: str, order: OrderRequest) -> PlaceOrderRe
 
     with conn.transaction():
         inserted = conn.execute(
-            "INSERT INTO orders (order_id, idempotency_key, request_hash, customer_id, total_cents) "
-            "VALUES (%s, %s, %s, %s, 0) ON CONFLICT (idempotency_key) DO NOTHING RETURNING order_id",
+            "INSERT INTO orders "
+            "(order_id, idempotency_key, request_hash, customer_id, total_cents) "
+            "VALUES (%s, %s, %s, %s, 0) "
+            "ON CONFLICT (idempotency_key) DO NOTHING RETURNING order_id",
             (order_id, idempotency_key, request_hash, order.customer_id),
         ).fetchone()
         if inserted is None:
@@ -90,11 +90,9 @@ def place_order(conn, idempotency_key: str, order: OrderRequest) -> PlaceOrderRe
         )
         with conn.cursor() as cur:
             cur.executemany(
-                "INSERT INTO order_lines (order_id, sku, quantity, unit_price_cents) VALUES (%s, %s, %s, %s)",
-                [
-                    (order_id, sku, qty, prices[sku])
-                    for sku, qty in sorted(lines.items())
-                ],
+                "INSERT INTO order_lines (order_id, sku, quantity, unit_price_cents) "
+                "VALUES (%s, %s, %s, %s)",
+                [(order_id, sku, qty, prices[sku]) for sku, qty in sorted(lines.items())],
             )
         conn.execute("INSERT INTO jobs (order_id) VALUES (%s)", (order_id,))
 
