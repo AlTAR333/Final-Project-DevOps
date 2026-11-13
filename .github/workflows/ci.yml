@@ -1,4 +1,3 @@
-# Owner: Tristan. Placeholder so PRs show a check; replace the step with the real pipeline.
 name: ci
 
 on:
@@ -10,8 +9,149 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.13"
+  TRIVY_IMAGE: aquasec/trivy:0.58.1
+  SYFT_IMAGE: anchore/syft:v1.18.1
+
 jobs:
-  placeholder:
+  lint:
     runs-on: ubuntu-24.04
     steps:
-      - run: echo "TODO(Tristan) lint, tests, public checker, image build, scan, SBOM, publish"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: pip install ruff==0.6.9
+      - run: ruff check .
+      - run: ruff format --check api/orders.py common/db.py db scripts tests
+
+  test:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: fulfillops
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: fulfillops_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fulfillops -d fulfillops_test"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://fulfillops:ci-only-password@localhost:5432/fulfillops_test
+      APP_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python -m db.migrate
+      - run: python -m pytest -q --junitxml=test-results.xml
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results.xml
+
+  contract:
+    needs: [lint, test]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: cp .env.example .env
+      - run: docker compose up -d --build --wait --wait-timeout 180
+      - run: |
+          for i in $(seq 1 60); do
+            curl -fsS http://localhost:8080/health/ready && exit 0
+            sleep 2
+          done
+          exit 1
+      - run: python fulfillops_public_checker.py --base-url http://localhost:8080 --concurrency --stress | tee checker-output.txt
+      - if: always()
+        run: docker compose logs --no-color > compose-logs.txt || true
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-checker
+          path: |
+            checker-output.txt
+            compose-logs.txt
+      - if: always()
+        run: docker compose down -v
+
+  build-scan:
+    needs: [lint, test]
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        component: [api, worker]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Image name
+        id: img
+        run: |
+          repo="$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')"
+          echo "ref=ghcr.io/${repo}/${{ matrix.component }}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+      - name: Build
+        run: docker build -f ${{ matrix.component }}/Dockerfile -t "${{ steps.img.outputs.ref }}" .
+      - name: SBOM
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$SYFT_IMAGE" \
+            "${{ steps.img.outputs.ref }}" -o spdx-json > sbom-${{ matrix.component }}.spdx.json
+      - name: Vulnerability report (informational, all severities)
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY_IMAGE" image \
+            --format table --exit-code 0 "${{ steps.img.outputs.ref }}" | tee trivy-${{ matrix.component }}.txt
+      - name: Vulnerability gate (blocking, fixable HIGH and CRITICAL)
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY_IMAGE" image \
+            --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 "${{ steps.img.outputs.ref }}"
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: supply-chain-${{ matrix.component }}
+          path: |
+            sbom-${{ matrix.component }}.spdx.json
+            trivy-${{ matrix.component }}.txt
+
+  publish:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build-scan, contract]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        component: [api, worker]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push immutable tag
+        run: |
+          repo="$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')"
+          ref="ghcr.io/${repo}/${{ matrix.component }}:${GITHUB_SHA}"
+          docker build -f ${{ matrix.component }}/Dockerfile -t "$ref" .
+          docker push "$ref"
+          digest="$(docker inspect --format '{{index .RepoDigests 0}}' "$ref")"
+          echo "### ${{ matrix.component }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- tag: \`$ref\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- digest: \`$digest\`" >> "$GITHUB_STEP_SUMMARY"
