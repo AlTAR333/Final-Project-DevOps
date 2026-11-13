@@ -1,2 +1,31 @@
-# Owner: Mink. Argo CD Application: repo AlTAR333/Final-Project-DevOps, path infra/k8s/base,
-# targetRevision main, automated sync with prune + selfHeal. TODO
+# Owner: Mink. Argo CD reconciles infra/k8s/base on main into the fulfillops namespace.
+# selfHeal: manual edits to Git-managed objects are reverted (drift demo).
+# prune: objects removed from Git are deleted, except the Namespace (Prune=false there),
+# so a bad commit can never take the database volume with it.
+# No resources finalizer: deleting this Application leaves the running stack and its data.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fulfillops
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/AlTAR333/Final-Project-DevOps.git
+    targetRevision: main
+    path: infra/k8s/base
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: fulfillops
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
