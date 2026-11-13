@@ -1,2 +1,2 @@
 # Runtime dependencies for the worker image (owner: Mink). Pin exact versions.
-psycopg[binary]==3.2.3
+psycopg[binary]==3.2.13

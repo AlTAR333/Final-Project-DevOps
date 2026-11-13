@@ -1,2 +1,10 @@
 # Runtime dependencies for the API image (owner: Armand). Pin exact versions.
-psycopg[binary]==3.2.3
+Flask==3.0.3
+Werkzeug==3.0.6
+waitress==3.0.0
+blinker==1.9.0
+click==8.5.0
+itsdangerous==2.2.0
+Jinja2==3.1.6
+MarkupSafe==3.0.3
+psycopg[binary]==3.2.13
