@@ -9,3 +9,10 @@ docs
 infra
 tests
 *.md
+.pytest_cache
+.ruff_cache
+*.zip
+scripts
+fulfillops_*.py
+compose.yaml
+.env.*
