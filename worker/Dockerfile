@@ -11,12 +11,15 @@ ENV PIP_NO_CACHE_DIR=1 \
 RUN python -m venv /opt/venv
 COPY worker/requirements.txt /tmp/requirements.txt
 RUN /opt/venv/bin/pip install -r /tmp/requirements.txt
+RUN /opt/venv/bin/python -m pip uninstall -y pip
 
 # ---- runtime stage -------------------------------------------------------------------------
 FROM ${PYTHON_IMAGE} AS runtime
 ENV PATH="/opt/venv/bin:${PATH}" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
+
+RUN python -m pip uninstall -y pip
 
 RUN groupadd --system --gid 10001 app \
  && useradd --system --uid 10001 --gid app --no-create-home --shell /usr/sbin/nologin app

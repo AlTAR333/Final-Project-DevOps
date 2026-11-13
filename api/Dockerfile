@@ -17,6 +17,7 @@ ENV PIP_NO_CACHE_DIR=1 \
 RUN python -m venv /opt/venv
 COPY api/requirements.txt /tmp/requirements.txt
 RUN /opt/venv/bin/pip install -r /tmp/requirements.txt
+RUN /opt/venv/bin/python -m pip uninstall -y pip
 
 # ---- runtime stage: no compiler, no pip cache, no build tools in the final layers ---------
 FROM ${PYTHON_IMAGE} AS runtime
@@ -24,6 +25,8 @@ ENV PATH="/opt/venv/bin:${PATH}" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     API_PORT=8080
+
+RUN python -m pip uninstall -y pip
 
 # Fixed numeric uid/gid: Kubernetes runAsNonRoot needs a number, and it matches infra/k8s.
 RUN groupadd --system --gid 10001 app \
