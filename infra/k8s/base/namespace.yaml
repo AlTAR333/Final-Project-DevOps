@@ -1,1 +1,12 @@
-# Owner: Mink. TODO
+# Owner: Mink. Every FulfillOps object lives in this namespace (kustomization sets it).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fulfillops
+  labels:
+    app.kubernetes.io/part-of: fulfillops
+    # Reject pods that run as root, mount host paths or add capabilities.
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"

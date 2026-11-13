@@ -1,1 +1,105 @@
-# Owner: Mink. TODO
+# Owner: Mink. Two API replicas. maxUnavailable 0 + readiness on /health/ready means a new
+# pod only receives traffic once it can reach a migrated database, and an old pod is only
+# removed after its replacement is Ready: a broken release stalls instead of taking traffic.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fulfillops-api
+  labels:
+    app.kubernetes.io/name: fulfillops-api
+    app.kubernetes.io/part-of: fulfillops
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  replicas: 2
+  revisionHistoryLimit: 5
+  minReadySeconds: 5
+  progressDeadlineSeconds: 120  # a stalled rollout is reported as failed (ProgressDeadlineExceeded)
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: fulfillops-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: fulfillops-api
+        app.kubernetes.io/part-of: fulfillops
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: api
+          image: fulfillops-api  # tag set in kustomization.yaml (commit SHA)
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: fulfillops-config
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: fulfillops-db
+                  key: DATABASE_URL
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 2
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          lifecycle:
+            preStop:  # let kube-proxy drop this endpoint before the process gets SIGTERM
+              sleep:
+                seconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: fulfillops-api
+  labels:
+    app.kubernetes.io/name: fulfillops-api
+    app.kubernetes.io/part-of: fulfillops
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: fulfillops-api

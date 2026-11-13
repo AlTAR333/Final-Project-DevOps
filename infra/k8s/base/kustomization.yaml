@@ -1,4 +1,6 @@
 # Owner: Mink. Apply with: kubectl apply -k infra/k8s/base
+# A release is a Git commit that changes newTag below (infra/kind/build-and-load.sh sets it).
+# The Secret fulfillops-db is created out of Git: see secret.example.yaml.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: fulfillops
@@ -10,3 +12,8 @@ resources:
   - api-deployment.yaml
   - api-service.yaml
   - worker-deployment.yaml
+images:
+  - name: fulfillops-api
+    newTag: "dev"
+  - name: fulfillops-worker
+    newTag: "dev"
