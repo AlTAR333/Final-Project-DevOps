@@ -55,7 +55,7 @@ spec:
                   key: DATABASE_URL
           readinessProbe:
             httpGet:
-              path: /health/ready
+              path: /health/broken
               port: http
             periodSeconds: 5
             timeoutSeconds: 2
