@@ -14,6 +14,6 @@ resources:
   - worker-deployment.yaml
 images:
   - name: fulfillops-api
-    newTag: "dev"
+    newTag: "3ef94b569a7a"
   - name: fulfillops-worker
-    newTag: "dev"
+    newTag: "3ef94b569a7a"
