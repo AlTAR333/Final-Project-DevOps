@@ -1,0 +1,44 @@
+
+== Demo: kill a worker mid-job
+09:31:03  Recreating worker-1 and worker-2 with lab settings: job takes 10s, lease 20s
+09:31:09  Order d1ccf87f-4bb6-48a4-b71d-b4fc14ba661f accepted. KIT-100 stock 7 -> 6 (reserved at acceptance)
+09:31:09  Job claimed by worker-2 (attempt 1). Killing worker-2 mid-job with SIGKILL
+09:31:09  After the crash: order status 'processing', job row (attempts|locked_by|lease_until):
+09:31:09    1|worker-2|2026-11-14 08:31:29.52305+00
+09:31:09  Waiting for the lease to expire (20s) and another worker to finish it...
+09:31:40  Order completed 31s after the kill
+
+09:31:40  PASS  job was reclaimed after the crash (attempts = 2)
+09:31:40  PASS  job was not dead-lettered
+09:31:40  PASS  exactly one job_completed event, by worker-1
+09:31:40  PASS  KIT-100 stock decremented once: 7 -> 6
+09:31:40  PASS  order d1ccf87f-4bb6-48a4-b71d-b4fc14ba661f survived the worker crash and completed exactly once
+09:31:40  Restoring both workers with normal settings
+
+== Demo: poison job
+09:31:46  Recreating worker-1 and worker-2 with FAULT_INJECTION_ENABLED=true
+09:31:52  Poison order eab5fe24-1418-4122-91d7-1aecf4685f1f accepted. PART-200 stock 12 -> 11
+09:31:53  attempt 1/5 failed -> retry in ~1s (backoff)
+09:31:54  attempt 2/5 failed -> retry in ~2s (backoff)
+09:31:56  attempt 3/5 failed -> retry in ~4s (backoff)
+09:32:00  attempt 4/5 failed -> retry in ~8s (backoff)
+09:32:08  attempt 5/5 failed -> dead letter
+09:32:08  Waiting 10 s to show it is not retried again...
+
+09:32:19  PASS  stopped at max_attempts (5/5), no further retries
+09:32:19  PASS  4 retries logged before the dead letter
+09:32:19  PASS  order status is 'failed' (operator review)
+09:32:19  PASS  job never completed
+09:32:19  PASS  PART-200 stock stays reserved: 12 -> 11, not restocked
+09:32:19  last_error: PoisonJobError: poison order injected by the fault drill
+09:32:19  Metrics: fulfillops_orders_failed_total 1 fulfillops_worker_retries_total 5 
+09:32:19  Restoring both workers with normal settings
+
+== Metrics (http://localhost:8090/metrics)
+fulfillops_orders_created_total 2
+fulfillops_orders_failed_total 1
+fulfillops_worker_retries_total 5
+fulfillops_db_up 1
+09:32:25  Order and retry counts come from the database, so every API replica reports the same.
+
+  Next: scripts/demo/3-drift.sh

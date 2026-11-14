@@ -1,0 +1,9 @@
+
+== Argo CD back on main
+09:41:10  Argo CD synced commit 3ef94b569a7a
+09:41:30  PASS  Argo CD follows main: Synced / Progressing
+
+== Stop the compose stack (data kept)
+09:41:33  PASS  compose stopped
+09:41:33  Evidence kept: docs/rolling_update_probe.csv (commit it as evidence)
+09:41:33  Branch mink-demo is kept, with the demo's deploy, broken and revert commits.

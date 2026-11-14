@@ -1,0 +1,17 @@
+
+== Checks
+09:30:34  PASS  on branch mink-demo, kind cluster exists
+
+== Compose test stack on :8090 (worker demos)
+09:30:34  Recreating it with a fresh test database...
+09:30:55  PASS  compose stack ready: KIT-100 7, PART-200 12 in stock
+
+== Argo CD follows branch mink-demo (Kubernetes demos)
+09:30:56  Argo CD synced commit 3ef94b569a7a
+09:30:56  PASS  kind ready: Argo CD Synced / Healthy
+
+== Ready. Open these before you start:
+  Terminal 2:  kubectl --context kind-fulfillops -n fulfillops get pods -w
+  Argo CD UI:  kubectl --context kind-fulfillops -n argocd port-forward svc/argocd-server 8443:443
+               then https://localhost:8443 (password: see infra/README.md)
+  Then run:    scripts/demo/2-workers.sh

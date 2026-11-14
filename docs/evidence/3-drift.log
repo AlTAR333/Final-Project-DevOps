@@ -1,0 +1,33 @@
+
+== What runs in the cluster
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/fulfillops-api      2/2     2            2           10h
+deployment.apps/fulfillops-worker   2/2     2            2           10h
+
+NAME                             READY   AGE
+statefulset.apps/fulfillops-db   1/1     10h
+
+NAME                     TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+service/fulfillops-api   NodePort    10.96.68.174   <none>        80:30080/TCP   10h
+service/fulfillops-db    ClusterIP   None           <none>        5432/TCP       10h
+
+NAME                                         STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/data-fulfillops-db-0   Bound    pvc-d879e3be-4a92-475d-94f3-f29c016abb03   1Gi        RWO            standard       <unset>                 10h
+
+NAME                                 READY   STATUS      RESTARTS   AGE
+fulfillops-api-d49579844-486tn       1/1     Running     0          10h
+fulfillops-api-d49579844-q72qz       1/1     Running     0          10h
+fulfillops-db-0                      1/1     Running     0          10h
+fulfillops-migrate-lj4vc             0/1     Completed   0          51m
+fulfillops-worker-5d9974bc78-kx727   1/1     Running     0          10h
+fulfillops-worker-5d9974bc78-w78ct   1/1     Running     0          10h
+
+09:32:32  Argo CD follows branch mink-demo, path infra/k8s/base: Synced / Healthy
+
+== Drift
+09:32:32  kubectl scale --replicas=5 done
+09:32:32  replicas 5 | Argo CD Synced
+09:32:33  replicas 2 | Argo CD Synced
+09:32:33  PASS  Argo CD self-healed the drift: back to 2 replicas, as Git says
+
+  Next: scripts/demo/4-release.sh

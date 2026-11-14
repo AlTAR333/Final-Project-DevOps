@@ -1,0 +1,36 @@
+
+== Part 1: rolling update
+09:32:46  Building both images tagged 3ef94b569a7a and loading them into kind...
+09:32:53  Committed and pushed: newTag 3ef94b569a7a
+09:32:56  Argo CD synced commit a75faa5eac4f
+deployment "fulfillops-api" successfully rolled out
+PROBE duration=45.0s total=179 success=179 failures=0 file=docs/rolling_update_probe.csv
+09:33:38  PASS  rolling update finished with zero failed probe samples (docs/rolling_update_probe.csv)
+
+== Part 2: broken release
+09:33:40  Committed and pushed the broken release
+09:33:43  Argo CD synced commit 6a44fdfa2e7a
+09:33:43  The new pod can never become Ready, so the old pods keep serving (deadline 120 s):
+09:33:43  ready API pods: 2 | users get /health/ready: 200 | rollout: NewReplicaSetAvailable
+09:33:53  ready API pods: 2 | users get /health/ready: 200 | rollout: ReplicaSetUpdated
+09:34:03  ready API pods: 2 | users get /health/ready: 200 | rollout: ReplicaSetUpdated
+09:34:13  ready API pods: 2 | users get /health/ready: 200 | rollout: ReplicaSetUpdated
+09:34:23  ready API pods: 2 | users get /health/ready: 200 | rollout: ReplicaSetUpdated
+09:34:33  ready API pods: 2 | users get /health/ready: 200 | rollout: ReplicaSetUpdated
+09:34:43  ready API pods: 2 | users get /health/ready: 200 | rollout: ReplicaSetUpdated
+09:34:53  ready API pods: 2 | users get /health/ready: 200 | rollout: ReplicaSetUpdated
+09:35:04  ready API pods: 2 | users get /health/ready: 200 | rollout: ReplicaSetUpdated
+09:35:14  ready API pods: 2 | users get /health/ready: 200 | rollout: ReplicaSetUpdated
+09:35:24  ready API pods: 2 | users get /health/ready: 200 | rollout: ReplicaSetUpdated
+09:35:34  ready API pods: 2 | users get /health/ready: 200 | rollout: ReplicaSetUpdated
+09:35:44  ready API pods: 2 | users get /health/ready: 200 | rollout: ReplicaSetUpdated
+09:35:54  ready API pods: 2 | users get /health/ready: 200 | rollout: ProgressDeadlineExceeded
+09:35:54  Diagnosis, from the events of pod/fulfillops-api-57f766489-krjfd:
+    Warning  Unhealthy  2m (x2 over 2m1s)   kubelet            spec.containers{api}: Readiness probe failed: Get "http://10.244.0.31:8080/health/broken": dial tcp 10.244.0.31:8080: connect: connection refused
+09:35:59  Argo CD health: Degraded
+09:35:59  PASS  rollout halted: the broken pod never got traffic
+
+== Part 3: recovery with git revert
+09:36:02  Pushed: Revert "demo: broken readiness probe"
+09:36:04  Argo CD synced commit 960f1b7bac00
+error: deployment "fulfillops-api" exceeded its progress deadline
