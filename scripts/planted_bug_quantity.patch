@@ -1,0 +1,13 @@
+diff --git a/api/validation.py b/api/validation.py
+index 967e1e7..736d7cb 100644
+--- a/api/validation.py
++++ b/api/validation.py
+@@ -107,7 +107,7 @@ def validate_order(idempotency_key: str | None, body: bytes) -> tuple[str, Order
+         if (
+             isinstance(quantity, bool)
+             or not isinstance(quantity, int)
+-            or not (QUANTITY_MIN <= quantity <= QUANTITY_MAX)
++            or not (QUANTITY_MIN <= quantity < QUANTITY_MAX)
+         ):
+             raise ApiError(
+                 422, ErrorCode.INVALID_QUANTITY, "quantity must be an integer from 1 to 20"
